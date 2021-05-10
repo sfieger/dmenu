@@ -58,7 +58,7 @@ static Drw *drw;
 static Clr *scheme[SchemeLast];
 
 /* Temporary arrays to allow overriding xresources values */
-static char *colortemp[4];
+static char *colortemp[6];
 static char *tempfonts;
 
 #include "config.h"
@@ -778,24 +778,38 @@ readxresources(void) {
 			fonts[0] = strdup(xval.addr);
 		else
 			fonts[0] = strdup(fonts[0]);
-		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval))
+		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval)) {
 			colors[SchemeNorm][ColBg] = strdup(xval.addr);
-		else
+                        colors[SchemeNormHighlight][ColBg] = strdup(xval.addr);
+		} else {
 			colors[SchemeNorm][ColBg] = strdup(colors[SchemeNorm][ColBg]);
-		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval))
+                        colors[SchemeNormHighlight][ColBg] = strdup(colors[SchemeNormHighlight][ColBg]);
+		}
+                if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval))
 			colors[SchemeNorm][ColFg] = strdup(xval.addr);
 		else
 			colors[SchemeNorm][ColFg] = strdup(colors[SchemeNorm][ColFg]);
-		if (XrmGetResource(xdb, "dmenu.selbackground", "*", &type, &xval))
+		if (XrmGetResource(xdb, "dmenu.selbackground", "*", &type, &xval)) {
 			colors[SchemeSel][ColBg] = strdup(xval.addr);
-		else
+                        colors[SchemeSelHighlight][ColBg] = strdup(xval.addr);
+		} else {
 			colors[SchemeSel][ColBg] = strdup(colors[SchemeSel][ColBg]);
-		if (XrmGetResource(xdb, "dmenu.selforeground", "*", &type, &xval))
+                        colors[SchemeSelHighlight][ColBg] = strdup(colors[SchemeSelHighlight][ColBg]);
+		}
+                if (XrmGetResource(xdb, "dmenu.selforeground", "*", &type, &xval))
 			colors[SchemeSel][ColFg] = strdup(xval.addr);
 		else
 			colors[SchemeSel][ColFg] = strdup(colors[SchemeSel][ColFg]);
+                if (XrmGetResource(xdb, "dmenu.highlight", "*", &type, &xval))
+                        colors[SchemeNormHighlight][ColFg] = strdup(xval.addr);
+                else
+                        colors[SchemeNormHighlight][ColFg] = strdup(colors[SchemeNormHighlight][ColFg]);
+                if (XrmGetResource(xdb, "dmenu.selhighlight", "*", &type, &xval))
+                        colors[SchemeSelHighlight][ColFg] = strdup(xval.addr);
+                else
+                        colors[SchemeSelHighlight][ColFg] = strdup(colors[SchemeSelHighlight][ColFg]);
 
-		XrmDestroyDatabase(xdb);
+                XrmDestroyDatabase(xdb);
 	}
 }
 
@@ -836,7 +850,11 @@ main(int argc, char *argv[])
 			colortemp[2] = argv[++i];
 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
 			colortemp[3] = argv[++i];
-		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
+		else if (!strcmp(argv[i], "-nh"))  /* normal highlight color */
+                        colortemp[4] = argv[++i];
+                else if (!strcmp(argv[i], "-sh"))  /* selected highlight color */
+                        colortemp[5] = argv[++i];
+                else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else
 			usage();
@@ -857,14 +875,22 @@ main(int argc, char *argv[])
 	/* Now we check whether to override xresources with commandline parameters */
 	if ( tempfonts )
 	   fonts[0] = strdup(tempfonts);
-	if ( colortemp[0])
+	if ( colortemp[0]) {
 	   colors[SchemeNorm][ColBg] = strdup(colortemp[0]);
-	if ( colortemp[1])
+           colors[SchemeNormHighlight][ColBg] = strdup(colortemp[0]);
+	}
+        if ( colortemp[1])
 	   colors[SchemeNorm][ColFg] = strdup(colortemp[1]);
-	if ( colortemp[2])
+	if ( colortemp[2]) {
 	   colors[SchemeSel][ColBg]  = strdup(colortemp[2]);
-	if ( colortemp[3])
+           colors[SchemeSelHighlight][ColBg] = strdup(colortemp[2]);
+	}
+        if ( colortemp[3])
 	   colors[SchemeSel][ColFg]  = strdup(colortemp[3]);
+        if ( colortemp[4])
+           colors[SchemeNormHighlight][ColFg] = strdup(colortemp[4]);
+        if ( colortemp[5])
+           colors[SchemeSelHighlight][ColFg] = strdup(colortemp[5]);
 
 	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
